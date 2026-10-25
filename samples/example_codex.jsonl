@@ -1,0 +1,9 @@
+{"type":"thread.started","thread_id":"synthetic-demo-123"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"a","type":"command_execution","command":"python -m pytest"}}
+{"type":"item.completed","item":{"id":"a","type":"command_execution","command":"python -m pytest","exit_code":1,"status":"failed"}}
+{"type":"item.started","item":{"id":"b","type":"command_execution","command":"python -m pytest"}}
+{"type":"item.completed","item":{"id":"b","type":"command_execution","command":"python -m pytest","exit_code":1,"status":"failed"}}
+{"type":"item.started","item":{"id":"c","type":"command_execution","command":"python -m pytest"}}
+{"type":"item.completed","item":{"id":"c","type":"command_execution","command":"python -m pytest","exit_code":0,"status":"completed"}}
+{"type":"turn.completed","usage":{"input_tokens":1200,"output_tokens":400}}

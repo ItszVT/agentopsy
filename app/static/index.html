@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Agentopsy | The case for better agents</title>
+<meta name="description" content="Local first investigation workbench for AI agent execution logs and benchmark trajectories." />
+<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<div class="layout">
+  <aside class="rail">
+    <div class="brand"><div class="brand-icon">A<span>.</span></div><div><strong>agentopsy<span>.</span></strong><small>AGENT INTELLIGENCE LAB</small></div></div>
+    <div class="side-label">WORKSPACE / 001</div>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-page="overview"><span class="nav-icon">◈</span><span>Overview</span><span class="nav-counter">01</span></button>
+      <button class="nav-item" data-page="cases"><span class="nav-icon">▤</span><span>Case files</span><span class="nav-counter">02</span></button>
+      <button class="nav-item" data-page="patterns"><span class="nav-icon">⌁</span><span>Pattern lab</span><span class="nav-counter">03</span></button>
+      <button class="nav-item" data-page="import"><span class="nav-icon">⇧</span><span>Import traces</span><span class="nav-counter">04</span></button>
+    </nav>
+    <div class="rail-bottom"><div class="signal"><span class="live-dot"></span> LOCAL MODE · PRIVATE</div><p>Agentopsy never runs an uploaded agent or sends imported logs to an AI API.</p><a href="https://huggingface.co/datasets/Contextbench/Tracebench" target="_blank" rel="noopener">Explore the benchmark ↗</a></div>
+  </aside>
+  <div class="main-shell">
+    <header class="topbar"><div class="crumb">THE INVESTIGATION DESK <span>/</span> <span id="current-page">OVERVIEW</span></div><div class="header-actions"><span class="edition">THE TRACE REPORT <b>No. 001</b></span><button class="outline-btn top-import" data-page="import">+ Import evidence</button></div></header>
+    <main id="view" aria-live="polite"></main>
+    <footer class="footer"><span>AGENTOPSY / RESEARCH PREVIEW</span><span>OBSERVE THE RUN. QUESTION THE CONCLUSION.</span><span>LOCAL FIRST · v0.1</span></footer>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="/static/main.js" defer></script>
+</body>
+</html>

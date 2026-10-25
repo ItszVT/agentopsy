@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+data/*.sqlite
+.env
+*.db
+*.sqlite*
+bench_manifest*.jsonl
+run.jsonl
+*.log
