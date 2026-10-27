@@ -217,7 +217,16 @@ def parse_codex(rows):
 def parse_import(data: bytes):
     rows = read_jsonl(data)
     if all('traj_id' in row for row in rows):
-        return 'Tracebench manifest', parse_manifest(rows)
+        cases = parse_manifest(rows)
+        digest = hashlib.sha256(data).hexdigest()
+        for row, case in zip(rows, cases):
+            value = row.get('incorrect_error_stage_count')
+            status = ('explicit_zero' if case['metadata']['annotation_known'] and int(value) == 0 else
+                      'positive' if case['metadata']['annotation_known'] else
+                      'missing' if value is None else 'invalid')
+            case['metadata'].update(manifest_sha256=digest, manifest_rows=len(rows),
+                                    annotation_status=status)
+        return 'Tracebench manifest', cases
     if all('type' in row for row in rows):
         return 'Codex execution log', parse_codex(rows)
     raise ImportProblem('Unsupported JSONL format. Upload a Tracebench manifest or codex exec --json output.')

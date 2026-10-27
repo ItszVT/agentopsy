@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from .analyzer import ImportProblem, parse_import, MAX_BYTES
 from .demo import demo_cases
 from .failure import failure_lab
+from .research import research_findings
 from .storage import init_db, get_cases, get_case, overview, save_cases, connection, clear_demo, performance_lab
 
 ROOT=Path(__file__).resolve().parent
@@ -59,6 +60,11 @@ def get_failure_lab(agent: str | None = None, category: str | None = None,
         raise HTTPException(422, 'Minimum steps must not exceed maximum steps.')
     return failure_lab(agent, category, outcome, min_steps, max_steps, signal)
 
+
+@app.get('/api/findings')
+def get_findings(agent: str | None = None, category: str | None = None):
+    return research_findings(agent, category)
+
 @app.get('/api/cases/{case_id}')
 def detail(case_id:str):
     item=get_case(case_id)
@@ -77,8 +83,13 @@ async def import_jsonl(request:Request):
         source,cases=parse_import(data)
     except ImportProblem as exc:
         raise HTTPException(422,str(exc)) from exc
+    ids = {c['id'] for c in cases}
+    with connection() as db:
+        existing = {r['id'] for r in db.execute('SELECT id FROM cases')}
     clear_demo()
     return {'format':source,'imported':save_cases(cases),
+            'records': {'unique':len(ids), 'inserted':len(ids-existing),
+                        'updated':len(ids & existing), 'duplicate_rows':len(cases)-len(ids)},
             'privacy':'Only extracted metadata and safe event categories are stored in local SQLite.'}
 
 @app.delete('/api/demo')

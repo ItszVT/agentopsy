@@ -39,7 +39,7 @@ A `turn.completed` event indicates **execution completion**, not verified task c
 
 ## Features in version 0.1
 
-* Six views: investigation overview, searchable case files, pattern lab, trace import, Agent Performance Lab, Failure Lab
+* Seven views: investigation overview, searchable case files, pattern lab, trace import, Agent Performance Lab, Failure Lab, The Findings
 * SQLite persistence for safe normalized metadata
 * Tracebench manifest and Codex JSONL importers
 * Outcome integrity: solved / unsolved / execution failed / unverified
@@ -108,6 +108,16 @@ node tests/browser_failure.cjs
 ```
 
 Install Playwright separately if desired (`npm install --no-save --package-lock=false playwright`), or set `AGENTOPSY_PLAYWRIGHT` to an existing Playwright module path. `AGENTOPSY_BROWSER` selects a Playwright browser channel (default `msedge`); `AGENTOPSY_SCREENSHOTS` optionally names an existing output folder. Browser checks do not import, delete, or modify database records.
+
+## The Findings and data reliability
+
+**The Findings** is an interactive research casebook with agent/category filters, annotation coverage, reproducible source and analysis fingerprints, calculated values, supporting sample sizes, interpretation limits, and exact case links. It compares execution lengths, incorrect-stage proportions, long-run recurrence, and agent outcome shares within task categories. Each comparative group must contain at least 10 eligible runs; this exploratory cutoff is not a significance test. Calculations run in Python over SQLite records without a model API or invented conclusions.
+
+The original manifest audit resolved all **595 ambiguous legacy annotation counts as explicit source zeros**. It also corrected **28 null outcomes previously misclassified as unsolved**: the audited snapshot has 504 solved, 468 unsolved, and 28 unverified Tracebench runs, retaining all 1,000 IDs and the separate Codex case. Outcomes now match the source rather than preserving an incorrect historical total. Reimporting updates existing IDs rather than duplicating cases; the import response reports inserted, updated, and duplicate-row counts. Missing and invalid annotations remain unknown.
+
+See [RESEARCH.md](RESEARCH.md) for the dataset checksum, source attribution, before/after reliability audit, methodology, actual findings, limitations, recruiter-facing project context, and step-by-step reproduction. Source manifests and SQLite databases stay local and are not bundled in GitHub. On another laptop, import the matching manifest to reproduce the data; the code alone does not restore local cases.
+
+Read-only research API: `/api/findings`, with optional `agent` and `category` parameters. For example, `/api/findings?category=software-engineering`. With the same optional browser setup described above, run `node tests/browser_research.cjs` for the new page's browser checks. Run `python -m pytest -q` for the full automated suite.
 
 ## How to evaluate it honestly
 
