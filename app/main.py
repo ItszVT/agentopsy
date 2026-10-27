@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .analyzer import ImportProblem, parse_import, MAX_BYTES
 from .demo import demo_cases
+from .failure import failure_lab
 from .storage import init_db, get_cases, get_case, overview, save_cases, connection, clear_demo, performance_lab
 
 ROOT=Path(__file__).resolve().parent
@@ -47,6 +48,16 @@ def list_cases(source:str='all', status:str='all', q:str='', limit:int=Query(def
 def get_performance(agent: str | None = None, category: str | None = None,
                     outcome: str | None = None):
     return performance_lab(agent, category, outcome)
+
+
+@app.get('/api/failure-lab')
+def get_failure_lab(agent: str | None = None, category: str | None = None,
+                    outcome: str | None = None, signal: str | None = None,
+                    min_steps: int | None = Query(default=None, ge=0),
+                    max_steps: int | None = Query(default=None, ge=0)):
+    if min_steps is not None and max_steps is not None and min_steps > max_steps:
+        raise HTTPException(422, 'Minimum steps must not exceed maximum steps.')
+    return failure_lab(agent, category, outcome, min_steps, max_steps, signal)
 
 @app.get('/api/cases/{case_id}')
 def detail(case_id:str):

@@ -28,35 +28,47 @@ def init_db():
         CREATE INDEX IF NOT EXISTS ix_cases_source ON cases(source);
         CREATE INDEX IF NOT EXISTS ix_cases_outcome ON cases(outcome);
         ''')
+        if 'metadata' not in {r['name'] for r in db.execute('PRAGMA table_info(cases)')}:
+            db.execute("ALTER TABLE cases ADD COLUMN metadata TEXT NOT NULL DEFAULT '{}'")
 
 
 def save_cases(cases):
     with connection() as db:
         for c in cases:
-            db.execute('''INSERT INTO cases VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            db.execute('''INSERT INTO cases
+                 (id,source,agent,model,task,category,outcome,step_count,issue_count,
+                  incorrect_stages,signals,events,is_demo,note,created_at,metadata)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                  ON CONFLICT(id) DO UPDATE SET
                  source=excluded.source, agent=excluded.agent, model=excluded.model,
                  task=excluded.task, category=excluded.category, outcome=excluded.outcome,
                  step_count=excluded.step_count, issue_count=excluded.issue_count,
                  incorrect_stages=excluded.incorrect_stages, signals=excluded.signals,
                  events=excluded.events, is_demo=excluded.is_demo,
-                 note=excluded.note, created_at=excluded.created_at''',(
+                 note=excluded.note, created_at=excluded.created_at, metadata=excluded.metadata''',(
                   c['id'],c['source'],c['agent'],c['model'],c['task'],c['category'],
                   c['outcome'],c['step_count'],c['issue_count'],c['incorrect_stages'],
                   json.dumps(c['signals']),json.dumps(c['events']),int(c['is_demo']),
-                  c['note'],c['created_at']))
+                  c['note'],c['created_at'],json.dumps(c.get('metadata', {}))))
     return len(cases)
 
 
 def _to_case(row, with_events=False):
     d = dict(row)
     d['signals'] = json.loads(d['signals'])
+    d['metadata'] = json.loads(d['metadata'])
     d['is_demo'] = bool(d['is_demo'])
     if with_events:
         d['events'] = json.loads(d['events'])
     else:
         d.pop('events')
     return d
+
+
+def count_available(case, field):
+    """Legacy zero counts are ambiguous; new imports retain explicit availability."""
+    key = 'steps_known' if field == 'step_count' else 'annotation_known'
+    return case['metadata'].get(key, case[field] > 0) is True
 
 
 def get_cases(source='all', status='all', q='', limit=1500):
@@ -88,7 +100,7 @@ def overview(source='all'):
             SUM(CASE WHEN outcome='solved' THEN 1 ELSE 0 END) AS solved,
             SUM(CASE WHEN outcome='unsolved' OR outcome='failed' THEN 1 ELSE 0 END) AS failed,
             SUM(CASE WHEN outcome='unverified' THEN 1 ELSE 0 END) AS unknown,
-            AVG(step_count) AS avg_steps,
+            AVG(CASE WHEN COALESCE(json_extract(metadata,'$.steps_known'), step_count>0) THEN step_count END) AS avg_steps,
             SUM(issue_count) AS findings,
             SUM(is_demo) AS demo_count
             FROM cases''' + where,args).fetchone())
@@ -96,11 +108,11 @@ def overview(source='all'):
         by_agent = [dict(r) for r in db.execute('''SELECT agent,COUNT(*) AS count,
             SUM(CASE WHEN outcome='solved' THEN 1 ELSE 0 END) AS solved,
             SUM(CASE WHEN outcome IN ('unsolved','failed') THEN 1 ELSE 0 END) AS failed,
-            ROUND(AVG(step_count),1) AS avg_steps FROM cases'''+where+' GROUP BY agent ORDER BY count DESC LIMIT 10',args)]
+            ROUND(AVG(CASE WHEN COALESCE(json_extract(metadata,'$.steps_known'), step_count>0) THEN step_count END),1) AS avg_steps FROM cases'''+where+' GROUP BY agent ORDER BY count DESC LIMIT 10',args)]
         by_category = [dict(r) for r in db.execute('SELECT category, COUNT(*) AS count FROM cases'+where+' GROUP BY category ORDER BY count DESC LIMIT 8',args)]
         rows = db.execute('SELECT signals FROM cases'+where,args).fetchall()
     from collections import Counter
-    patterns=Counter(s for row in rows for s in json.loads(row['signals']) if s!='No rule-based anomaly found')
+    patterns=Counter(s for row in rows for s in set(json.loads(row['signals'])) if s!='No rule-based anomaly found')
     return {'total':totals['total'] or 0, 'solved':totals['solved'] or 0,'failed':totals['failed'] or 0,
         'unknown':totals['unknown'] or 0,'avg_steps':round(totals['avg_steps'] or 0,1),
         'findings':totals['findings'] or 0,'demo_count':totals['demo_count'] or 0,
@@ -132,7 +144,9 @@ def performance_lab(agent=None, category=None, outcome=None):
                 clauses.append(field + '=?')
                 args.append(value)
         rows = [dict(r) for r in db.execute(
-            'SELECT agent,category,outcome,step_count FROM cases WHERE ' + ' AND '.join(clauses), args)]
+            'SELECT agent,category,outcome,step_count,metadata FROM cases WHERE ' + ' AND '.join(clauses), args)]
+        for row in rows:
+            row['metadata'] = json.loads(row['metadata'])
 
     def counts(items):
         solved = sum(r['outcome'] == 'solved' for r in items)
@@ -143,7 +157,7 @@ def performance_lab(agent=None, category=None, outcome=None):
                     success_rate=round(100*solved/verified, 1) if verified else None)
 
     def steps(items, label):
-        values = [r['step_count'] for r in items if r['outcome'] == label]
+        values = [r['step_count'] for r in items if r['outcome'] == label and count_available(r, 'step_count')]
         return dict(count=len(values), mean=round(mean(values), 1) if values else None,
                     median=median(values) if values else None)
 

@@ -48,6 +48,17 @@ def _number(value, default=0):
         return default
 
 
+def _known_count(value):
+    """Accept nonnegative integers and integer strings, never coerce missing to known zero."""
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, str):
+        if len(value) > 19 or not value.isascii() or not value.isdecimal():
+            return False
+        value = int(value)
+    return isinstance(value, int) and 0 <= value <= 9223372036854775807
+
+
 def _safe_label(value, max_chars=80):
     # No free-form source strings used for sensitive log fields.
     return str(value or 'Unknown')[:max_chars]
@@ -74,11 +85,13 @@ def parse_manifest(rows):
     """One case per Tracebench manifest row; no unsupported step replay."""
     cases = []
     for idx, row in enumerate(rows):
-        if 'traj_id' not in row or 'step_count' not in row:
+        if 'traj_id' not in row:
             raise ImportProblem(f'Row {idx+1} is not a supported Tracebench manifest.')
         task = _safe_label(row.get('task_name') or row.get('category') or 'Benchmark task', 100)
-        count = _number(row.get('step_count'))
-        incorrect = _number(row.get('incorrect_error_stage_count'))
+        steps_known = _known_count(row.get('step_count'))
+        annotation_known = _known_count(row.get('incorrect_error_stage_count'))
+        count = int(row['step_count']) if steps_known else 0
+        incorrect = int(row['incorrect_error_stage_count']) if annotation_known else 0
         stages = _load_nested(row.get('stages'))
         signals = []
         if row.get('solved') is False:
@@ -111,6 +124,7 @@ def parse_manifest(rows):
             'step_count': count, 'issue_count': incorrect,
             'incorrect_stages': incorrect, 'signals': signals,
             'events': events, 'is_demo': False,
+            'metadata': {'steps_known': steps_known, 'annotation_known': annotation_known},
             'note': ('Stage overview reconstructed from manifest metadata. Actual tool actions '
                      'require the separately published trajectory artifact.'),
             'created_at': _safe_label(row.get('generated_at') or ''),
@@ -191,6 +205,8 @@ def parse_codex(rows):
         'step_count': len(events), 'issue_count': sum(issues.values()),
         'incorrect_stages': 0, 'signals':signals,'events':events[:500],
         'is_demo':False,
+        'metadata': {'steps_known': True, 'annotation_known': False,
+                     'signal_counts': dict(issues)},
         'note': (f'Codex emitted {input_tokens:,} input and {output_tokens:,} output tokens. '
                  'A completed turn is not proof the task succeeded. Raw commands, prompts, '
                  'tool outputs, and file paths were not saved.'),
@@ -200,7 +216,7 @@ def parse_codex(rows):
 
 def parse_import(data: bytes):
     rows = read_jsonl(data)
-    if all('traj_id' in row and 'step_count' in row for row in rows):
+    if all('traj_id' in row for row in rows):
         return 'Tracebench manifest', parse_manifest(rows)
     if all('type' in row for row in rows):
         return 'Codex execution log', parse_codex(rows)
