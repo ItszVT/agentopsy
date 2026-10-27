@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .analyzer import ImportProblem, parse_import, MAX_BYTES
 from .demo import demo_cases
-from .storage import init_db, get_cases, get_case, overview, save_cases, connection, clear_demo
+from .storage import init_db, get_cases, get_case, overview, save_cases, connection, clear_demo, performance_lab
 
 ROOT=Path(__file__).resolve().parent
 
@@ -41,6 +41,12 @@ def get_overview(source: str='all'):
 @app.get('/api/cases')
 def list_cases(source:str='all', status:str='all', q:str='', limit:int=Query(default=1500,ge=1,le=2000)):
     return {'cases':get_cases(source,status,q,limit)}
+
+
+@app.get('/api/performance')
+def get_performance(agent: str | None = None, category: str | None = None,
+                    outcome: str | None = None):
+    return performance_lab(agent, category, outcome)
 
 @app.get('/api/cases/{case_id}')
 def detail(case_id:str):

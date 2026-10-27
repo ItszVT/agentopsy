@@ -39,7 +39,7 @@ A `turn.completed` event indicates **execution completion**, not verified task c
 
 ## Features in version 0.1
 
-* Four views: investigation overview, searchable case files, pattern lab, trace import
+* Five views: investigation overview, searchable case files, pattern lab, trace import, Agent Performance Lab
 * SQLite persistence for safe normalized metadata
 * Tracebench manifest and Codex JSONL importers
 * Outcome integrity: solved / unsolved / execution failed / unverified
@@ -54,6 +54,18 @@ A `turn.completed` event indicates **execution completion**, not verified task c
 pip install pytest httpx
 python -m pytest -q
 ```
+
+## Agent Performance Lab
+
+Open **Agent Performance Lab** in the sidebar to explore the Tracebench data already imported into SQLite. No additional download or database migration is needed. Demo cases and Codex logs are excluded; an empty lab invites you to import a manifest.
+
+Filter by agent, task category, and outcome, or reset all filters. Each category has its own agent comparison with total runs, solved runs, labeled sample size, success rate, and excluded count. Success rate is `100 × solved / (solved + unsolved)`; unverified and other outcomes never enter that denominator. Missing or non-boolean manifest outcome labels are imported as unverified. A dash means no eligible observations, rather than zero success.
+
+Each category also compares mean and median recorded steps for solved and unsolved runs, with separate sample sizes and a plain-English explanation. Step comparisons exclude all other outcomes. The mean is the average and the median is the middle count. Aggregations use all matching database records, with no case-list display limit. The read-only endpoint is `/api/performance`, with optional `agent`, `category`, and `outcome` query parameters.
+
+Outcome filters also restrict rate denominators: solved-only results show 100%, unsolved-only results show 0%, and unverified-only results have no rate. The view warns when such a filter is active. Clear the outcome filter for a meaningful solved-versus-unsolved comparison.
+
+Comparisons are descriptive, separated by category, and are not a fair leaderboard. Samples count runs, not unique tasks; agents can have different task mixes even in the same category. Small samples and selective benchmark sampling limit conclusions. **Correlation does not prove the cause of failure:** longer trajectories may reflect task difficulty or other differences. No causal failure diagnosis is inferred. Existing imported records are not rewritten; reimport a source manifest to correct any previously misclassified non-boolean outcome labels.
 
 ## How to evaluate it honestly
 

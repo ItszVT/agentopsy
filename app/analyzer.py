@@ -74,14 +74,14 @@ def parse_manifest(rows):
     """One case per Tracebench manifest row; no unsupported step replay."""
     cases = []
     for idx, row in enumerate(rows):
-        if 'traj_id' not in row or 'solved' not in row or 'step_count' not in row:
+        if 'traj_id' not in row or 'step_count' not in row:
             raise ImportProblem(f'Row {idx+1} is not a supported Tracebench manifest.')
         task = _safe_label(row.get('task_name') or row.get('category') or 'Benchmark task', 100)
         count = _number(row.get('step_count'))
         incorrect = _number(row.get('incorrect_error_stage_count'))
         stages = _load_nested(row.get('stages'))
         signals = []
-        if not row.get('solved'):
+        if row.get('solved') is False:
             signals.append('Unsolved benchmark task')
         if incorrect:
             signals.append('Annotated incorrect stages')
@@ -106,7 +106,8 @@ def parse_manifest(rows):
             'source': 'Tracebench', 'agent': _safe_label(row.get('agent')),
             'model': _safe_label(row.get('model')),
             'task': task, 'category': _safe_label(row.get('category') or 'Benchmark'),
-            'outcome': 'solved' if row['solved'] is True else 'unsolved',
+            'outcome': ('solved' if row.get('solved') is True else
+                        'unsolved' if row.get('solved') is False else 'unverified'),
             'step_count': count, 'issue_count': incorrect,
             'incorrect_stages': incorrect, 'signals': signals,
             'events': events, 'is_demo': False,
