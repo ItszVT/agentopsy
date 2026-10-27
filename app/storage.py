@@ -2,16 +2,26 @@
 import json
 import os
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 DB_PATH = Path(os.environ.get('AGENTOPSY_DB', Path(__file__).resolve().parent.parent/'data'/'agentopsy.sqlite'))
+READ_ONLY = False
 
 
+@contextmanager
 def connection():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    if READ_ONLY:
+        conn = sqlite3.connect(DB_PATH.resolve().as_uri()+'?mode=ro', uri=True)
+    else:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 def init_db():

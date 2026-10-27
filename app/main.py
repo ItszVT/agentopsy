@@ -1,32 +1,79 @@
 """Local first API; never sends uploaded traces to an external service."""
 import csv
 import io
+import os
+import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 
 from .analyzer import ImportProblem, parse_import, MAX_BYTES
 from .demo import demo_cases
 from .failure import failure_lab
 from .research import research_findings
+from . import storage
+from .public_demo import load_seed, ATTRIBUTION, SOURCE_PAGE
 from .storage import init_db, get_cases, get_case, overview, save_cases, connection, clear_demo, performance_lab
 
 ROOT=Path(__file__).resolve().parent
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
-    with connection() as db:
-        existing=db.execute('SELECT COUNT(*) FROM cases').fetchone()[0]
-    if not existing:
-        save_cases(demo_cases())
-    yield
+    mode = os.environ.get('AGENTOPSY_MODE', 'local')
+    if mode not in ('local', 'demo-preview', 'public'):
+        raise RuntimeError('Unknown AGENTOPSY_MODE; use local, demo-preview, or public.')
+    app.state.mode = mode
+    app.state.read_only = mode != 'local'
+    app.state.demo_ready = False
+    if mode == 'public' and not os.environ.get('AGENTOPSY_DATA_PERMISSION_REFERENCE', '').strip():
+        raise RuntimeError('Public demo blocked: confirm dataset display/redistribution rights and supply a permission reference. See DEPLOYMENT.md.')
+    previous_path = storage.DB_PATH
+    temporary = None
+    try:
+        if app.state.read_only:
+            cases = load_seed(os.environ.get('AGENTOPSY_DEMO_SEED', str(ROOT.parent/'data'/'public-demo.json')))
+            temporary = tempfile.TemporaryDirectory(prefix='agentopsy-demo-')
+            storage.DB_PATH = Path(temporary.name)/'demo.sqlite'
+            init_db()
+            save_cases(cases)
+            # All request connections become SQLite read-only after seeding.
+            storage.READ_ONLY = True
+            app.state.demo_ready = True
+        else:
+            init_db()
+            with connection() as db:
+                existing=db.execute('SELECT COUNT(*) FROM cases').fetchone()[0]
+            if not existing:
+                save_cases(demo_cases())
+        yield
+    finally:
+        storage.READ_ONLY = False
+        app.state.demo_ready = False
+        storage.DB_PATH = previous_path
+        if temporary:
+            temporary.cleanup()
 
 app = FastAPI(title='Agentopsy', version='0.1.0', lifespan=lifespan)
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
 app.mount('/static',StaticFiles(directory=str(ROOT/'static')),name='static')
+
+
+@app.middleware('http')
+async def public_boundary(request: Request, call_next):
+    read_only = os.environ.get('AGENTOPSY_MODE', 'local') != 'local'
+    if read_only and not getattr(app.state, 'demo_ready', False):
+        return JSONResponse({'detail':'Benchmark demo is not ready.'}, status_code=503)
+    if read_only and request.method not in ('GET', 'HEAD', 'OPTIONS'):
+        return JSONResponse({'detail':'This benchmark demo is read-only. Run Agentopsy locally to import private traces.'}, status_code=403)
+    response = await call_next(request)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    return response
 
 @app.get('/')
 def index():
@@ -34,7 +81,9 @@ def index():
 
 @app.get('/api/health')
 def health():
-    return {'ok':True,'mode':'local','upload_limit_mb':8}
+    return {'ok':True, 'mode':getattr(app.state, 'mode', 'local'),
+            'read_only':getattr(app.state, 'read_only', False), 'upload_limit_mb':8,
+            'attribution':ATTRIBUTION, 'source_url':SOURCE_PAGE}
 
 @app.get('/api/overview')
 def get_overview(source: str='all'):
@@ -76,11 +125,23 @@ def detail(case_id:str):
 async def import_jsonl(request:Request):
     if request.headers.get('content-type','').split(';')[0] not in ('application/octet-stream','application/x-ndjson','application/jsonl'):
         raise HTTPException(415,'Upload raw JSONL bytes, not multipart form data.')
-    if int(request.headers.get('content-length','0') or 0)>MAX_BYTES:
-        raise HTTPException(413,'File exceeds 8 MB.')
-    data=await request.body()
+    raw_length=request.headers.get('content-length')
+    if raw_length is not None:
+        try:
+            length=int(raw_length)
+        except ValueError:
+            raise HTTPException(400,'Invalid content length.')
+        if length < 0:
+            raise HTTPException(400,'Invalid content length.')
+        if length>MAX_BYTES:
+            raise HTTPException(413,'File exceeds 8 MB.')
+    data=bytearray()
+    async for chunk in request.stream():
+        if len(data)+len(chunk)>MAX_BYTES:
+            raise HTTPException(413,'File exceeds 8 MB.')
+        data.extend(chunk)
     try:
-        source,cases=parse_import(data)
+        source,cases=parse_import(bytes(data))
     except ImportProblem as exc:
         raise HTTPException(422,str(exc)) from exc
     ids = {c['id'] for c in cases}

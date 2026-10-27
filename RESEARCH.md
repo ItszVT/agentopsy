@@ -4,6 +4,8 @@ Agentopsy is a local investigation workbench for agent execution metadata. Its r
 
 ## Dataset and provenance
 
+The portfolio preview now prepares this same checksum-pinned source into an isolated read-only SQLite demo, never from the developer database. The 28 unverified outcomes remain excluded from rates. Data publication rights have not been confirmed: the checked Tracebench card metadata and file listing declare no license. Public deployment is still gated on rights clearance and owner approval. See [DEPLOYMENT.md](DEPLOYMENT.md); no hosted demo has been created. This changes delivery and onboarding, not the research calculations below.
+
 Source: [Contextbench/Tracebench](https://huggingface.co/datasets/Contextbench/Tracebench), specifically the locally imported `bench_manifest.verified.jsonl`. The [dataset card](https://huggingface.co/datasets/Contextbench/Tracebench/blob/main/README.md) describes a selectively sampled set of TerminalBench and SWE-bench trajectories. The filename “verified” does not imply that every row has a non-null task outcome.
 
 The audited local file has **1,000 records**, **4,987,552 bytes**, and SHA-256:

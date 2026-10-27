@@ -2,6 +2,8 @@
 
 **An investigation desk for AI agent runs.** Agentopsy makes agent execution metadata easier to inspect without inventing success claims or exposing raw prompts. This is a local, free, experimental MVP.
 
+**Portfolio launch status:** a read-only, real-data demo is prepared and tested locally; it is **not publicly deployed**. Render Free is the recommended hosting approach, subject to current account eligibility, cold starts, and usage limits. Dataset publication rights still need confirmation: Tracebench currently declares no license in the checked card metadata or file listing. See [deployment readiness and permission gates](DEPLOYMENT.md) before creating any service. [Short portfolio case study](PORTFOLIO.md).
+
 ## Run locally (Windows, macOS, Linux)
 
 Install Python 3.10 or later. In the extracted `agentopsy` directory:
@@ -16,6 +18,16 @@ python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8765
 For macOS/Linux activation use `source .venv/bin/activate`.
 
 Open **http://127.0.0.1:8765**. The app starts with **12 synthetic, explicitly labeled example cases** so you can explore every screen immediately. Importing a real file automatically replaces these sample cases. No API key is required.
+
+This default editable mode is for localhost development. For a recruiter-style experience with the audited real sample already loaded, prepare an isolated demo seed and run the localhost-only preview:
+
+```powershell
+python -m app.public_demo prepare --download --output data/public-demo.json
+$env:AGENTOPSY_MODE = 'demo-preview'
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8767 --workers 1
+```
+
+The seed command verifies the original source checksum, preserves 504 solved / 468 unsolved / 28 unverified outcomes, and refuses to overwrite existing outputs. It never reads your SQLite database or copies Codex logs. The preview reconstructs a separate temporary SQLite database, disables all writes, and shows benchmark attribution and a first-visit investigation guide. Existing local data remains untouched. `demo-preview` must stay on localhost while publication rights are unresolved. Full preparation, restart behavior, cross-platform instructions, and future approved Render setup are in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Import real data
 
@@ -54,6 +66,8 @@ A `turn.completed` event indicates **execution completion**, not verified task c
 pip install pytest httpx
 python -m pytest -q
 ```
+
+Launch checks add seed/source integrity, public write blocking, read-only SQLite, isolated startup/restart behavior, dataset-permission gating, bounded streaming uploads, and existing feature compatibility. Optional browser scripts are `tests/browser_demo.cjs` (preview at port 8767), `tests/browser_research.cjs`, and `tests/browser_failure.cjs` (editable app at port 8766). See [deployment validation instructions](DEPLOYMENT.md#validation-and-reproducibility) for setup and performance/advisory-check limits.
 
 ## Agent Performance Lab
 

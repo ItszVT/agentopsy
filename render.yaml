@@ -1,0 +1,17 @@
+# Preparation only. Do not create this service until deployment and data rights are approved.
+services:
+  - type: web
+    name: agentopsy-demo
+    runtime: python
+    plan: free
+    autoDeployTrigger: 'off'
+    buildCommand: pip install -r requirements.txt && python -m app.public_demo prepare --download --output data/public-demo.json
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --limit-concurrency 32 --timeout-keep-alive 5
+    healthCheckPath: /api/health
+    envVars:
+      - key: AGENTOPSY_MODE
+        value: public
+      - key: AGENTOPSY_DEMO_SEED
+        value: data/public-demo.json
+      - key: AGENTOPSY_DATA_PERMISSION_REFERENCE
+        sync: false
