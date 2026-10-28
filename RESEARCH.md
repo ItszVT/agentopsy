@@ -4,19 +4,21 @@ Agentopsy is a local investigation workbench for agent execution metadata. Its r
 
 ## Dataset and provenance
 
-The portfolio preview now prepares this same checksum-pinned source into an isolated read-only SQLite demo, never from the developer database. The 28 unverified outcomes remain excluded from rates. Data publication rights have not been confirmed: the checked Tracebench card metadata and file listing declare no license. Public deployment is still gated on rights clearance and owner approval. See [DEPLOYMENT.md](DEPLOYMENT.md); no hosted demo has been created. This changes delivery and onboarding, not the research calculations below.
+The current public-demo source is the official [NJU-LINK/CodeTraceBench verified manifest](https://huggingface.co/datasets/NJU-LINK/CodeTraceBench), revision `aa213b84ffb6690fc37ca15766d6ca174ec36d4d`. The publisher declares MIT in the dataset card and metadata. Credit: Han Li et al., [CodeTracer: Towards Traceable Agent States (2026)](https://arxiv.org/abs/2604.11641). The dataset is selectively sampled; its “verified” name does not imply every outcome is non-null.
 
-Source: [Contextbench/Tracebench](https://huggingface.co/datasets/Contextbench/Tracebench), specifically the locally imported `bench_manifest.verified.jsonl`. The [dataset card](https://huggingface.co/datasets/Contextbench/Tracebench/blob/main/README.md) describes a selectively sampled set of TerminalBench and SWE-bench trajectories. The filename “verified” does not imply that every row has a non-null task outcome.
-
-The audited local file has **1,000 records**, **4,987,552 bytes**, and SHA-256:
+The official file contains **1,000 records**, **5,115,695 bytes**, and SHA-256:
 
 ```text
-5b33978effbeaa966d701160429729eb9631d524305abc870f9aa0d421ef8963
+bd02d3dafa145146567e87f7d55b158ef0dd30043d4a4c2c03e631c2056ff92e
 ```
 
-This identifies the actual bytes used, not an inferred upstream revision. Upstream files may change; reproduction of this snapshot requires the same checksum. The dataset and local SQLite database are not committed to GitHub. Agentopsy stores safe extracted metadata, not the source manifest's paths or raw trajectory artifacts.
+The original analysis used the Contextbench/Tracebench mirror (4,987,552 bytes, SHA-256 `5b33978effbeaa966d701160429729eb9631d524305abc870f9aa0d421ef8963`). The sources were compared record by record: all 1,000 IDs, outcomes, categories, agents/models, lengths, stage boundaries, and annotation contents match. The official file adds `annotation_relpath`, which Agentopsy discards. The files are not byte-identical; **all numerical research results and sample memberships remain unchanged**. [Comparison report](DATASET_COMPARISON.json).
 
-Fields used: `traj_id` (hashed into the existing case ID), `agent`, `category`, `solved`, `step_count`, and `incorrect_error_stage_count`. The dataset card describes the last field as the number of stages with at least 50% incorrect steps; it is not a count of all individual incorrect actions. Manifest stage boundaries are not full tool-action timelines. Models, task difficulty, unique-task identity, and split membership are not controlled experimental variables in the comparisons below.
+The official source is now downloaded directly, never relabeled from a mirror seed. Availability and repository/revision/license provenance are retained, and existing hashed case IDs remain stable. The internal source label `Tracebench` identifies the compatible manifest family; it is not a claim that every local historical import originated from the official publisher. The prepared public seed contains only the official snapshot. Local databases and raw manifests remain outside Git.
+
+[DATASET_LICENSE.md](DATASET_LICENSE.md) records the explicit MIT declaration, dataset authorship, the missing relative dataset LICENSE link, the separately identified inherited project-code copyright notice, and upstream restrictions. Available notices are preserved and linked in the UI and exports. The review covers the derived metadata only, excluding raw prompts, code, problem text, paths and archives. Publication still requires owner approval. See [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Fields used: `traj_id` (hashed into the case ID), `agent`, `category`, `solved`, `step_count`, and `incorrect_error_stage_count`. The official card defines the last field as stages with at least 50% incorrect steps, not individual incorrect actions. Manifest stage boundaries are not full tool-action timelines. Task difficulty, unique-task identity, and agent/model selection are not controlled experimental variables in the comparisons below.
 
 ## Reliability investigation and correction
 
@@ -100,11 +102,11 @@ Agentopsy has not measured time saved, product adoption, cost reduction, accurac
 * Agent, model, difficulty, task selection, and other confounders are not controlled. Same-category comparisons remain observational.
 * Explicit zero is the source's annotation count, not proof that no error occurred. Annotation accuracy and agreement have not been evaluated.
 * Manifest metadata cannot reconstruct commands, tool outputs, recoveries, or causal chains. Historical Codex signal occurrence totals remain unknown when the original importer did not retain them. Codex data is excluded from The Findings.
-* Local source snapshots and databases are intentionally absent from GitHub; a fresh laptop needs the matching source manifest imported again. The upstream revision associated with the original local file is not inferred.
+* Local source snapshots and databases are intentionally absent from GitHub; a fresh laptop needs the matching source manifest imported again. The historical mirror revision is not inferred; the official demo revision is explicitly pinned.
 
 ## Reproduce the analysis
 
-1. Follow the README's local setup and start the server. Download the [verified JSONL manifest](https://huggingface.co/datasets/Contextbench/Tracebench/resolve/main/bench_manifest.verified.jsonl), checking its SHA-256 against the snapshot above. A different checksum means a different source snapshot; do not assume identical results.
+1. Follow the README's local setup and start the server. Download the [official verified JSONL manifest](https://huggingface.co/datasets/NJU-LINK/CodeTraceBench/resolve/aa213b84ffb6690fc37ca15766d6ca174ec36d4d/bench_manifest.verified.jsonl), checking its SHA-256 against the snapshot above. A different checksum means a different source snapshot; do not assume identical results.
 2. Use **Import traces** to submit the manifest through the normal importer. Repeat imports update matching IDs, preserving other cases. Verify **The Findings** reports the expected outcome and annotation coverage. The local imported database is the source of the displayed results.
 3. Open **The Findings**, select an agent/category, expand methodology and supporting cases, and follow the research-data link for the full calculation response. API examples:
 

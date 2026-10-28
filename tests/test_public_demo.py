@@ -64,7 +64,7 @@ def test_preview_is_isolated_read_only_and_preserves_unknown_outcomes(seed):
         assert 'PRIVATE FIXTURE' not in client.get('/api/export.csv').text
         health=client.get('/api/health').json()
         assert health['mode']=='demo-preview' and health['read_only'] is True
-        assert 'Contextbench/Tracebench' in health['attribution']
+        assert 'CodeTraceBench' in health['attribution']
         assert client.get('/api/cases',headers={'accept-encoding':'gzip'}).headers['content-encoding']=='gzip'
         research=client.get('/api/findings').json()
         assert research['verified']==2 and research['unverified']==1

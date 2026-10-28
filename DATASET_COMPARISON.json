@@ -1,0 +1,156 @@
+{
+  "analysis_check": {
+    "analysis_sha256": "1162f7d0422a0503bcaa8b8e36c8eeb32330985ff914c77cca228ba9c0aef191",
+    "annotation_coverage_identical": true,
+    "eligible_findings": 31,
+    "isolated_restarts_verified": 2,
+    "numerical_findings_identical": true,
+    "supporting_case_memberships_identical": true
+  },
+  "candidate_bytes": 5115695,
+  "candidate_counts": {
+    "solved": 504,
+    "total": 1000,
+    "unsolved": 468,
+    "unverified": 28
+  },
+  "candidate_only_ids": 0,
+  "candidate_rows": 1000,
+  "candidate_sha256": "bd02d3dafa145146567e87f7d55b158ef0dd30043d4a4c2c03e631c2056ff92e",
+  "normalized_differing_fields": {},
+  "previous_bytes": 4987552,
+  "previous_counts": {
+    "solved": 504,
+    "total": 1000,
+    "unsolved": 468,
+    "unverified": 28
+  },
+  "previous_only_ids": 0,
+  "previous_rows": 1000,
+  "previous_sha256": "5b33978effbeaa966d701160429729eb9631d524305abc870f9aa0d421ef8963",
+  "raw_differing_fields": {
+    "annotation_relpath": 1000
+  },
+  "schemas": [
+    {
+      "agent": [
+        "str"
+      ],
+      "artifact_path": [
+        "str"
+      ],
+      "category": [
+        "str"
+      ],
+      "difficulty": [
+        "str"
+      ],
+      "generated_at": [
+        "str"
+      ],
+      "incorrect_error_stage_count": [
+        "int"
+      ],
+      "incorrect_stages": [
+        "list"
+      ],
+      "model": [
+        "str"
+      ],
+      "solved": [
+        "NoneType",
+        "bool"
+      ],
+      "source_relpath": [
+        "NoneType",
+        "str"
+      ],
+      "stage_count": [
+        "int"
+      ],
+      "stages": [
+        "list"
+      ],
+      "step_count": [
+        "int"
+      ],
+      "tags": [
+        "list"
+      ],
+      "task_name": [
+        "str"
+      ],
+      "task_slug": [
+        "str"
+      ],
+      "traj_id": [
+        "str"
+      ],
+      "trial_name": [
+        "str"
+      ]
+    },
+    {
+      "agent": [
+        "str"
+      ],
+      "annotation_relpath": [
+        "str"
+      ],
+      "artifact_path": [
+        "str"
+      ],
+      "category": [
+        "str"
+      ],
+      "difficulty": [
+        "str"
+      ],
+      "generated_at": [
+        "str"
+      ],
+      "incorrect_error_stage_count": [
+        "int"
+      ],
+      "incorrect_stages": [
+        "list"
+      ],
+      "model": [
+        "str"
+      ],
+      "solved": [
+        "NoneType",
+        "bool"
+      ],
+      "source_relpath": [
+        "NoneType",
+        "str"
+      ],
+      "stage_count": [
+        "int"
+      ],
+      "stages": [
+        "list"
+      ],
+      "step_count": [
+        "int"
+      ],
+      "tags": [
+        "list"
+      ],
+      "task_name": [
+        "str"
+      ],
+      "task_slug": [
+        "str"
+      ],
+      "traj_id": [
+        "str"
+      ],
+      "trial_name": [
+        "str"
+      ]
+    }
+  ],
+  "shared_ids": 1000
+}

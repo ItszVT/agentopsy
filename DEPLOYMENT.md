@@ -1,6 +1,6 @@
 # Public portfolio demo: deployment readiness
 
-**Prepared, not publicly deployed.** Creating a service requires the project owner's approval. Publishing the benchmark demo also requires a defensible dataset permission/license basis. No paid resources are required by the proposed configuration, and no service has been created.
+**Prepared, not publicly deployed.** Creating a service requires the project owner's approval. The official NJU-LINK/CodeTraceBench MIT declaration now supplies the reviewed license basis for the derived-metadata demo; retain its attribution and notices. No paid resources are required by the proposed configuration, and no service has been created.
 
 ## Recommended hosting
 
@@ -14,26 +14,28 @@ Verified on 27 October 2026 against the provider's official documentation:
 
 The supplied `render.yaml` is a preparation artifact with `plan: free` and automatic deployment disabled. It does not create resources merely by existing in GitHub. After approval, explicitly verify that Render still offers the Free plan and that account-specific billing requirements are acceptable. Never substitute a paid plan silently.
 
-## Dataset permission is an outstanding launch gate
+## Reviewed dataset license and owner approval
 
-The [Tracebench dataset card](https://huggingface.co/datasets/Contextbench/Tracebench/blob/main/README.md), [top-level files](https://huggingface.co/datasets/Contextbench/Tracebench/tree/main), and Hub API metadata were checked. No license is declared in the card metadata and no license file was listed. This does **not** establish that redistribution or public display is permitted. Attribution and public download availability are not substitutes for permission. Underlying TerminalBench/SWE-bench terms also need consideration; do not assume a license from either automatically covers Tracebench's derived annotations.
+Use the official **NJU-LINK/CodeTraceBench verified manifest**, pinned to revision `aa213b84ffb6690fc37ca15766d6ca174ec36d4d`. Its dataset card and metadata explicitly declare MIT. The previous Contextbench mirror had no checked license declaration and is no longer the public demo's source. The files have the same 1,000 trajectory IDs and all analytical inputs match, but they differ in bytes and the official manifest adds an annotation-path field which is discarded.
 
-Before publishing, establish applicable license terms or obtain permission covering public display of the derived metadata, keep the evidence, and apply required notices. No author was contacted during this task. `AGENTOPSY_DATA_PERMISSION_REFERENCE` must identify that actual evidence; entering a placeholder or the dataset URL is not permission. The setting is an operator attestation, not an automated legal verification. `public` mode refuses startup without a nonempty reference. Deployment approval from the project owner is a separate requirement.
+[DATASET_LICENSE.md](DATASET_LICENSE.md) documents the publisher, paper authors, exact comparison, missing relative dataset LICENSE link, the associated code's inherited MIT copyright notice, and third-party limits. The license basis supports the **derived metadata projection**, not blanket republication of prompts, code, tasks, reasoning, or raw trajectory archives. Available MIT and Apache notices are preserved in `third_party/NOTICES.txt`, embedded in each seed, served at `/dataset-notices.txt`, linked in the UI, and retained in demo CSV exports.
 
-The real dataset, prepared seed, local databases, Codex logs, and screenshots are excluded from Git. A safe **localhost-only preview** is available while publication permission is unresolved. Do not bind `demo-preview` to a public interface or use it to bypass the publication gate.
+`AGENTOPSY_DATA_PERMISSION_REFERENCE` remains a public-startup attestation. The prepared Render configuration now supplies the pinned official dataset license declaration as the actual reference; a placeholder is not needed. This is evidence of the reviewed basis, not an automated adjudication of third-party rights. Use the exact official seed and preserve the notices. **Project-owner deployment approval is still required. No public service has been created.**
+
+The real dataset, prepared seed, local databases, Codex logs, and screenshots remain excluded from Git. A localhost-only preview is available before deployment approval. Do not publicly expose `demo-preview` to bypass approval. If future licensing evidence becomes contradictory, keep the benchmark localhost-only or use the existing clearly synthetic examples until a licensed replacement is reviewed.
 
 ## Reproducible seed preparation
 
 Run from the repository directory with the dependencies installed:
 
 ```powershell
-python -m app.public_demo prepare --manifest C:/path/to/bench_manifest.verified.jsonl --output data/public-demo.json
+python -m app.public_demo prepare --manifest C:/path/to/bench_manifest.verified.jsonl --output data/public-demo-nju.json
 ```
 
 Alternatively, test the fixed public-source download used by the Render build:
 
 ```powershell
-python -m app.public_demo prepare --download --output data/public-demo.json
+python -m app.public_demo prepare --download --output data/public-demo-nju.json
 ```
 
 The command refuses to overwrite an existing output. For a rebuild, choose a new output path or explicitly remove only the old generated seed after inspecting it. The supplied Render build starts from a clean checkout; do not commit a seed file into it.
@@ -43,29 +45,29 @@ Preparation reads the **manifest, never the developer's database**, verifies its
 Pinned source:
 
 ```text
-https://huggingface.co/datasets/Contextbench/Tracebench/resolve/main/bench_manifest.verified.jsonl
-SHA-256: 5b33978effbeaa966d701160429729eb9631d524305abc870f9aa0d421ef8963
+https://huggingface.co/datasets/NJU-LINK/CodeTraceBench/resolve/aa213b84ffb6690fc37ca15766d6ca174ec36d4d/bench_manifest.verified.jsonl
+SHA-256: bd02d3dafa145146567e87f7d55b158ef0dd30043d4a4c2c03e631c2056ff92e
 Expected: 1,000 Tracebench runs = 504 solved + 468 unsolved + 28 unverified
 Annotations: 595 explicit zeros + 405 positive counts
 ```
 
-The URL follows upstream `main`, but the checksum is fixed. If upstream bytes change or the download fails, the build fails; it must not substitute another snapshot, the developer DB, or synthetic examples. Review any new snapshot and update tests/research documentation deliberately. Runtime startup requires the prepared seed and performs no network download. The seed is trusted operator-managed build input; this is not a signed dataset attestation.
+Both the immutable revision URL and checksum are fixed. If upstream bytes change or the download fails, the build fails; it must not substitute another snapshot, the developer DB, or synthetic examples. Review any new snapshot and update tests/research documentation deliberately. Runtime startup requires the prepared seed and performs no network download. The seed is trusted operator-managed build input; this is not a signed dataset attestation.
 
 ## Local demo preview
 
 ```powershell
 $env:AGENTOPSY_MODE = 'demo-preview'
-$env:AGENTOPSY_DEMO_SEED = 'data/public-demo.json'
+$env:AGENTOPSY_DEMO_SEED = 'data/public-demo-nju.json'
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8767 --workers 1 --limit-concurrency 32 --timeout-keep-alive 5
 ```
 
-On macOS/Linux, prefix the command with `AGENTOPSY_MODE=demo-preview AGENTOPSY_DEMO_SEED=data/public-demo.json`. Do not use Uvicorn's `--reload` on the hosted service. `.python-version` selects the latest Python 3.13 patch on Render, as documented in [Render's Python version settings](https://render.com/docs/python-version).
+On macOS/Linux, prefix the command with `AGENTOPSY_MODE=demo-preview AGENTOPSY_DEMO_SEED=data/public-demo-nju.json`. Do not use Uvicorn's `--reload` on the hosted service. `.python-version` selects the latest Python 3.13 patch on Render, as documented in [Render's Python version settings](https://render.com/docs/python-version).
 
 `local` remains the default for development, with existing SQLite persistence and editable imports. Use `Remove-Item Env:AGENTOPSY_MODE` in PowerShell (or `unset AGENTOPSY_MODE` on Unix) to return to local mode in a shell where preview was enabled. The demo's `AGENTOPSY_DB` is intentionally ignored: startup always selects a fresh temporary database. Existing local databases are neither opened nor overwritten in preview/public mode.
 
 ## Startup and persistence behavior
 
-1. Validate the mode and the publication reference for public mode.
+1. Validate the mode and the reviewed official-source license reference for public mode.
 2. Load and validate the prepared benchmark seed. Missing, mismatched, duplicate-ID, or mixed-source seeds fail startup; there is no fallback to private or synthetic data.
 3. Create and seed an isolated temporary SQLite database, then switch subsequent SQLite connections to URI `mode=ro`.
 4. Serve immutable benchmark reads. Reject every non-GET/HEAD/OPTIONS request in demo mode before processing an upload body.
@@ -85,12 +87,12 @@ FastAPI, Starlette, Uvicorn, and Pydantic were upgraded and pinned. A production
 
 ## Approved deployment procedure — do not execute yet
 
-Only after **both** project-owner deployment approval and dataset publication rights are established:
+Only after **project-owner deployment approval**, with the reviewed metadata-only license scope and notices retained:
 
 1. Connect the existing GitHub repository to a new Render **Free Python web service**, or review `render.yaml` via Blueprint setup. This would create a public service, so it must not be done before approval.
 2. Confirm the repository root is the directory containing `app/`, `requirements.txt`, and `render.yaml`. Use `.python-version` for Python 3.13. Do not attach a paid disk, database, or other paid resource.
-3. Build: `pip install -r requirements.txt && python -m app.public_demo prepare --download --output data/public-demo.json`.
-4. Set `AGENTOPSY_MODE=public`, `AGENTOPSY_DEMO_SEED=data/public-demo.json`, and `AGENTOPSY_DATA_PERMISSION_REFERENCE` to the evidence of cleared rights. Do not copy local `.env` files or local SQLite databases.
+3. Build: `pip install -r requirements.txt && python -m app.public_demo prepare --download --output data/public-demo-nju.json`.
+4. Set `AGENTOPSY_MODE=public`, `AGENTOPSY_DEMO_SEED=data/public-demo-nju.json`, and `AGENTOPSY_DATA_PERMISSION_REFERENCE` to the pinned official MIT declaration (provided in `render.yaml`). Do not copy local `.env` files or local SQLite databases.
 5. Start: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --limit-concurrency 32 --timeout-keep-alive 5`. Health path: `/api/health`. Keep automatic deployments off; future public updates remain deliberate.
 6. Verify the host reports healthy, the source attribution is visible, totals are 1,000/504/468/28, private case IDs are absent, uploads/deletion return 403, and all existing read views work over HTTPS. Recheck the same counts after an instance restart. Do not expose stack traces, source manifests, or seed files via static routes.
 
@@ -114,6 +116,6 @@ node tests/browser_failure.cjs
 node tests/browser_demo.cjs
 ```
 
-`AGENTOPSY_URL` can override each script's URL; `AGENTOPSY_SCREENSHOTS` selects an existing local screenshot output folder. The demo script expects the pinned 1,000-run seed. Python tests use synthetic fixtures and temporary databases, including permission gating, seed integrity, source isolation, SQL read-only enforcement, blocked writes, restart reconstruction, 28-outcome logic through source-fidelity tests, invalid uploads, and existing feature compatibility. No test suite deploys anything.
+`AGENTOPSY_URL` can override each script's URL; `AGENTOPSY_SCREENSHOTS` selects an existing local screenshot output folder. The demo script expects the pinned 1,000-run seed. Python tests use synthetic fixtures and temporary databases, including license-reference gating, official-source and notice integrity, source isolation, SQL read-only enforcement, blocked writes, restart reconstruction, 28-outcome logic through source-fidelity tests, invalid uploads, and existing feature compatibility. No test suite deploys anything.
 
 Local preview measurements (five sequential requests per endpoint, median, uncompressed response bytes) were approximately 27–101 ms across overview, cases, agent performance, Failure Lab, and findings. Payloads ranged from about 1 KB to 671 KB. These are laptop smoke measurements, **not cloud latency or scalability claims**; gzip reduces transfer size for clients that request it. Free-tier CPU, cold starts, and concurrent traffic can behave differently.

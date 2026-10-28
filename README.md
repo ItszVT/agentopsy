@@ -2,7 +2,7 @@
 
 **An investigation desk for AI agent runs.** Agentopsy makes agent execution metadata easier to inspect without inventing success claims or exposing raw prompts. This is a local, free, experimental MVP.
 
-**Portfolio launch status:** a read-only, real-data demo is prepared and tested locally; it is **not publicly deployed**. Render Free is the recommended hosting approach, subject to current account eligibility, cold starts, and usage limits. Dataset publication rights still need confirmation: Tracebench currently declares no license in the checked card metadata or file listing. See [deployment readiness and permission gates](DEPLOYMENT.md) before creating any service. [Short portfolio case study](PORTFOLIO.md).
+**Portfolio launch status:** a read-only, real-data demo is prepared and tested locally; it is **not publicly deployed**. Render Free is the recommended hosting approach, subject to current account eligibility, cold starts, and usage limits. The licensing blocker is resolved for the derived-metadata scope by using the official NJU-LINK/CodeTraceBench MIT publication, with attribution and upstream notices retained; see [the source comparison and licensing review](DATASET_LICENSE.md). See [deployment readiness and permission gates](DEPLOYMENT.md) before creating any service. [Short portfolio case study](PORTFOLIO.md).
 
 ## Run locally (Windows, macOS, Linux)
 
@@ -22,18 +22,18 @@ Open **http://127.0.0.1:8765**. The app starts with **12 synthetic, explicitly l
 This default editable mode is for localhost development. For a recruiter-style experience with the audited real sample already loaded, prepare an isolated demo seed and run the localhost-only preview:
 
 ```powershell
-python -m app.public_demo prepare --download --output data/public-demo.json
+python -m app.public_demo prepare --download --output data/public-demo-nju.json
 $env:AGENTOPSY_MODE = 'demo-preview'
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8767 --workers 1
 ```
 
-The seed command verifies the original source checksum, preserves 504 solved / 468 unsolved / 28 unverified outcomes, and refuses to overwrite existing outputs. It never reads your SQLite database or copies Codex logs. The preview reconstructs a separate temporary SQLite database, disables all writes, and shows benchmark attribution and a first-visit investigation guide. Existing local data remains untouched. `demo-preview` must stay on localhost while publication rights are unresolved. Full preparation, restart behavior, cross-platform instructions, and future approved Render setup are in [DEPLOYMENT.md](DEPLOYMENT.md).
+The seed command verifies the original source checksum, preserves 504 solved / 468 unsolved / 28 unverified outcomes, and refuses to overwrite existing outputs. It never reads your SQLite database or copies Codex logs. The preview reconstructs a separate temporary SQLite database, disables all writes, and shows benchmark attribution and a first-visit investigation guide. Existing local data remains untouched. `demo-preview` must stay on localhost until deployment is approved. The official source revision, MIT declaration, citation, and notices are verified during seed preparation/startup. Full preparation, restart behavior, cross-platform instructions, and future approved Render setup are in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Import real data
 
 ### 1. Tracebench benchmark manifest
 
-Download **`bench_manifest.verified.jsonl`** (or `bench_manifest.full.jsonl` when small enough) from [Contextbench/Tracebench](https://huggingface.co/datasets/Contextbench/Tracebench/tree/main), then use **Import traces**. The verified split provides 1,000 real benchmark trajectories and their outcomes. In the case of larger files, import a smaller subset. The public dataset is not bundled in this ZIP because it must be attributed and downloaded directly from the source.
+Download **`bench_manifest.verified.jsonl`** (or `bench_manifest.full.jsonl` when small enough) from [NJU-LINK/CodeTraceBench](https://huggingface.co/datasets/NJU-LINK/CodeTraceBench/tree/aa213b84ffb6690fc37ca15766d6ca174ec36d4d), then use **Import traces**. The verified split provides 1,000 real benchmark trajectories and their outcomes. In the case of larger files, import a smaller subset. The public dataset is not bundled in this ZIP because it must be attributed and downloaded directly from the source.
 
 **Important:** The manifest offers task outcome labels, step counts, and stage metadata. It does **not** contain full tool action timelines. Agentopsy does not pretend otherwise. The separate benchmark artifact archives are a planned future integration.
 
@@ -169,6 +169,8 @@ agentopsy/
 
 ## Data and references
 
-* [Tracebench dataset](https://huggingface.co/datasets/Contextbench/Tracebench)
+* [Official CodeTraceBench dataset (MIT)](https://huggingface.co/datasets/NJU-LINK/CodeTraceBench)
+* [CodeTracer paper and dataset citation](https://arxiv.org/abs/2604.11641)
+* [Dataset licensing review and third-party notices](DATASET_LICENSE.md)
 * [Official Codex JSONL documentation](https://learn.chatgpt.com/docs/non-interactive-mode)
 * [Hugging Face trace privacy guidance](https://huggingface.co/docs/hub/agent-traces)
