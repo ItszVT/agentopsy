@@ -98,3 +98,37 @@ def test_served_notices_health_and_csv_retain_license_and_citation(official_seed
         assert all(r['dataset_license']=='MIT' for r in rows)
         assert 'PRIVATE_PROMPT' not in exported.text
         assert 'rel="license"' in exported.headers['link']
+
+
+def test_public_csv_protection_keeps_database_read_only_and_notices_exact(official_seed, monkeypatch):
+    import sqlite3
+    from app import storage
+
+    path, payload, _, _ = official_seed
+    case = payload['cases'][0]
+    case['task'] = '\uff1d1+1";,\nnext'
+    case['agent'] = '\u200b+1+1'
+    path.write_text(json.dumps(payload), encoding='utf-8')
+    monkeypatch.setenv('AGENTOPSY_MODE', 'public')
+    monkeypatch.setenv('AGENTOPSY_DATA_PERMISSION_REFERENCE', public_demo.LICENSE_URL)
+    with TestClient(app) as client:
+        original = client.get('/api/overview').json()
+        exported = client.get('/api/export.csv')
+        reader = csv.DictReader(io.StringIO(exported.text, newline=''))
+        rows = list(reader)
+        assert reader.fieldnames == ['id','source','agent','model','task','category','outcome',
+                                    'step_count','issue_count','incorrect_stages','is_demo',
+                                    'dataset_source','dataset_license','license_notice']
+        assert len(rows) == 3
+        row = next(r for r in rows if r['id'] == case['id'])
+        assert row['task'] == "'" + case['task']
+        assert row['agent'] == "'" + case['agent']
+        assert client.get('/api/cases/'+case['id']).json()['task'] == case['task']
+        assert rows[0]['license_notice'] == public_demo.NOTICES_PATH.read_text(encoding='utf-8')
+        assert all(r['dataset_license'] == 'MIT' for r in rows)
+        assert client.get('/api/overview').json() == original
+        assert (original['solved'], original['failed'], original['unknown']) == (1,1,1)
+        assert client.post('/api/import', content=b'=1+1').status_code == 403
+        assert client.delete('/api/demo').status_code == 403
+        with pytest.raises(sqlite3.OperationalError, match='readonly'):
+            storage.clear_demo()

@@ -3,6 +3,7 @@ import csv
 import io
 import os
 import tempfile
+import unicodedata
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -166,6 +167,23 @@ async def import_jsonl(request:Request):
 def delete_demo():
     return {'deleted':clear_demo()}
 
+def _csv_cell(value):
+    """Escape spreadsheet-sensitive text at export, without changing stored data.
+
+    Normalize only the inspection copy to catch compatibility/fullwidth forms.
+    Guard leading whitespace, controls, format and combining characters rather
+    than trusting spreadsheet-specific trimming rules. CSV has no cell types;
+    see CSV_SECURITY.md for spreadsheet import and re-save limitations.
+    """
+    if not isinstance(value, str) or not value:
+        return value
+    first = unicodedata.normalize('NFKC', value)[0]
+    if (first in '=+-@\u2212\u2795\u2796' or first.isspace() or
+            unicodedata.category(first)[0] in 'CZM'):
+        return "'" + value
+    return value
+
+
 @app.get('/api/export.csv')
 def export_csv():
     cases=get_cases(limit=2000)
@@ -174,12 +192,12 @@ def export_csv():
     read_only=getattr(app.state,'read_only',False)
     if read_only:
         fields+=['dataset_source','dataset_license','license_notice']
-    writer=csv.DictWriter(output,fieldnames=fields)
+    writer=csv.DictWriter(output,fieldnames=fields,quoting=csv.QUOTE_ALL)
     writer.writeheader()
     for index,c in enumerate(cases):
         row={k:c[k] for k in fields if k in c}
         if read_only:
             row.update(dataset_source=SOURCE_PAGE,dataset_license='MIT',
                        license_notice=NOTICES_PATH.read_text(encoding='utf-8') if index==0 else '')
-        writer.writerow(row)
+        writer.writerow({key:_csv_cell(value) for key,value in row.items()})
     return StreamingResponse(iter([output.getvalue()]),media_type='text/csv',headers={'Content-Disposition':'attachment; filename="agentopsy_cases.csv"'})

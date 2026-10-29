@@ -100,3 +100,4 @@ The sample is selective, runs aren't necessarily unique tasks, and agents may fa
 - [DATASET_LICENSE.md](DATASET_LICENSE.md): source comparison, license evidence, and publication boundaries.
 - [DEPLOYMENT.md](DEPLOYMENT.md): seed preparation, startup/restart behavior, and hosting configuration. Its approval notes record the preparation stage; the demo linked above is now live.
 - [PORTFOLIO.md](PORTFOLIO.md): the shorter project case study.
+- [CSV_SECURITY.md](CSV_SECURITY.md): spreadsheet-safe exports and Excel/LibreOffice limitations.
